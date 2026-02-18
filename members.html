@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Members Vault — Braveheart Trading</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E2C47A;
+    --gold-dim: #8A6E30;
+    --black: #0A0A0A;
+    --black-2: #111111;
+    --black-3: #181818;
+    --black-4: #222222;
+    --border: rgba(201,168,76,0.15);
+    --border-subtle: rgba(255,255,255,0.06);
+    --text: #F0EDE6;
+    --text-muted: #7A7468;
+    --text-dim: #3A3530;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    display: grid;
+    grid-template-rows: 56px 1fr;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: rgba(10,10,10,0.95);
+    border-bottom: 1px solid var(--border-subtle);
+    backdrop-filter: blur(20px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo-mark {
+    width: 32px;
+    height: 32px;
+    border: 1.5px solid var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gold);
+    position: relative;
+  }
+
+  .logo-mark::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid rgba(201,168,76,0.25);
+  }
+
+  .header-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .user-email {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  .logout-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    padding: 7px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .logout-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  /* MAIN */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: calc(100vh - 56px);
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    background: var(--black-2);
+    border-right: 1px solid var(--border-subtle);
+    padding: 24px 0;
+    overflow-y: auto;
+  }
+
+  .sidebar-section {
+    margin-bottom: 8px;
+  }
+
+  .sidebar-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 16px 20px 8px;
+  }
+
+  .sidebar-item {
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .sidebar-item:hover {
+    background: var(--black-3);
+    color: var(--text);
+  }
+
+  .sidebar-item.active {
+    background: rgba(201,168,76,0.06);
+    color: var(--gold);
+    position: relative;
+  }
+
+  .sidebar-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--gold);
+  }
+
+  /* CONTENT */
+  .content {
+    padding: 48px 56px;
+    overflow-y: auto;
+  }
+
+  .welcome-section {
+    margin-bottom: 48px;
+  }
+
+  .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    max-width: 560px;
+  }
+
+  /* MODULES */
+  .modules-grid {
+    display: grid;
+    gap: 1px;
+    background: var(--border-subtle);
+    border: 1px solid var(--border-subtle);
+    margin-bottom: 48px;
+  }
+
+  .module-card {
+    background: var(--black-2);
+    padding: 28px 32px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-left: 3px solid transparent;
+  }
+
+  .module-card:hover {
+    background: var(--black-3);
+  }
+
+  .module-card.active {
+    border-left-color: var(--gold);
+    background: var(--black-3);
+  }
+
+  .module-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .module-number {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  .module-duration {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--text-dim);
+  }
+
+  .module-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .module-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* VIDEO SECTION */
+  .video-section {
+    display: none;
+  }
+
+  .video-section.active {
+    display: block;
+  }
+
+  .video-wrapper {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    background: #000;
+    margin-bottom: 32px;
+  }
+
+  .video-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  .video-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 32px;
+  }
+
+  .video-title-section h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .video-subtitle {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+  }
+
+  .video-actions {
+    display: flex;
+    gap: 12px;
+  }
+
+  .btn-secondary {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: var(--black-3);
+    border: 1px solid var(--border-subtle);
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .tabs {
+    display: flex;
+    gap: 32px;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 28px;
+  }
+
+  .tab {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding-bottom: 12px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .tab.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  .tab-content {
+    display: none;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  .description-text {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.8;
+    margin-bottom: 16px;
+  }
+
+  .resources-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .resource-item {
+    background: var(--black-2);
+    border: 1px solid var(--border-subtle);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    text-decoration: none;
+  }
+
+  .resource-item:hover {
+    border-color: var(--gold);
+  }
+
+  .resource-icon {
+    width: 36px;
+    height: 36px;
+    background: rgba(201,168,76,0.1);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+
+  .resource-info {
+    flex: 1;
+  }
+
+  .resource-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .resource-type {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--text-dim);
+  }
+
+  @media (max-width: 900px) {
+    .main-grid {
+      grid-template-columns: 1fr;
+    }
+    .sidebar {
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .content {
+      padding: 32px 24px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo-mark">BHT</div>
+    <span class="header-title">Members Vault</span>
+  </div>
+  <div class="header-right">
+    <span class="user-email" id="user-email"></span>
+    <button class="logout-btn" onclick="logout()">Sign Out</button>
+  </div>
+</header>
+
+<div class="main-grid">
+  
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Navigation</div>
+      <div class="sidebar-item active" onclick="showView('dashboard')">📊 Dashboard</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Courses</div>
+      <div class="sidebar-item" onclick="showView('inception')">🎓 Inception Model</div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+    
+    <!-- DASHBOARD VIEW -->
+    <div id="view-dashboard" class="view-content">
+      <div class="welcome-section">
+        <p class="eyebrow">Welcome back</p>
+        <h1>Your vault is live.</h1>
+        <p class="subtitle">Start with the Inception Model below, or pick up where you left off. New content drops bi-weekly.</p>
+      </div>
+
+      <p class="eyebrow">Available Courses</p>
+      <div class="modules-grid">
+        <div class="module-card" onclick="showView('inception')">
+          <div class="module-header">
+            <span class="module-number">Inception Model</span>
+            <span class="module-duration">3 Modules</span>
+          </div>
+          <h3 class="module-title">Narrative (Inception Model)</h3>
+          <p class="module-desc">Master the mechanics of day trading with a clear framework for identifying high-probability setups using market confluence.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- INCEPTION MODEL VIEW -->
+    <div id="view-inception" class="view-content video-section">
+      <div class="welcome-section">
+        <p class="eyebrow">Inception Model</p>
+        <h1>Narrative</h1>
+        <p class="subtitle">Three-part module covering the full narrative framework.</p>
+      </div>
+
+      <p class="eyebrow">Video 1 — Introduction</p>
+      <div class="video-wrapper">
+        <iframe src="https://www.youtube.com/embed/Wgds6ZWIqSU" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+
+      <div class="video-meta">
+        <div class="video-title-section">
+          <h2>Narrative — Part 1</h2>
+          <p class="video-subtitle">Inception Model · Module 1</p>
+        </div>
+        <div class="video-actions">
+          <button class="btn-secondary" onclick="showVideo(1)">Next Video →</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab(0)">Description</div>
+        <div class="tab" onclick="switchTab(1)">Resources</div>
+      </div>
+
+      <div class="tab-content active">
+        <p class="description-text">In this first video, we break down the concept of narrative in the context of day trading. You'll learn how to read higher timeframe context and identify the dominant market narrative before entering any position.</p>
+        <p class="description-text">By the end of this module, you'll understand how institutions think about market structure and how that thinking informs every trade you take.</p>
+      </div>
+
+      <div class="tab-content">
+        <div class="resources-list">
+          <a href="pdf-viewer.html" class="resource-item">
+            <div class="resource-icon">PDF</div>
+            <div class="resource-info">
+              <div class="resource-name">Inception Model — Narrative Framework.pdf</div>
+              <div class="resource-type">Module 1 Reference · 2.4 MB</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <hr style="border:none; border-top:1px solid var(--border-subtle); margin: 48px 0;">
+
+      <p class="eyebrow" id="video2-section">Video 2</p>
+      <div class="video-wrapper" id="video2-wrapper" style="display:none;">
+        <iframe src="https://www.youtube.com/embed/uK-Pw04teEc" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+
+      <hr style="border:none; border-top:1px solid var(--border-subtle); margin: 48px 0;">
+
+      <p class="eyebrow" id="video3-section">Video 3</p>
+      <div class="video-wrapper" id="video3-wrapper" style="display:none;">
+        <iframe src="https://www.youtube.com/embed/A-X7gBaJsAI" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Initialize Supabase
+  const SUPABASE_URL = 'https://ueeecuvnqyqsxjafbyzy.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVlZWVjdXZucXlxc3hqYWZieXp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNTMyMTcsImV4cCI6MjA4NjkyOTIxN30.2EuYujAMsDSZcndLNhz_lzakCqdxezXhfod6p6RWNUw';
+  
+  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Check auth on load
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (!session) {
+      window.location.href = 'login.html';
+    } else {
+      document.getElementById('user-email').textContent = session.user.email;
+    }
+  });
+
+  // Logout function
+  async function logout() {
+    await supabase.auth.signOut();
+    window.location.href = 'login.html';
+  }
+
+  // Show different views
+  function showView(viewName) {
+    document.querySelectorAll('.view-content').forEach(v => {
+      v.style.display = v.id === `view-${viewName}` ? 'block' : 'none';
+    });
+    
+    document.querySelectorAll('.sidebar-item').forEach(item => {
+      item.classList.remove('active');
+    });
+    event.target.classList.add('active');
+  }
+
+  // Switch tabs
+  function switchTab(index) {
+    document.querySelectorAll('.tab').forEach((tab, i) => {
+      tab.classList.toggle('active', i === index);
+    });
+    document.querySelectorAll('.tab-content').forEach((content, i) => {
+      content.classList.toggle('active', i === index);
+    });
+  }
+
+  // Show next video
+  function showVideo(num) {
+    if (num === 1) {
+      document.getElementById('video2-wrapper').style.display = 'block';
+      document.getElementById('video2-section').scrollIntoView({ behavior: 'smooth' });
+    } else if (num === 2) {
+      document.getElementById('video3-wrapper').style.display = 'block';
+      document.getElementById('video3-section').scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+</script>
+
+</body>
+</html>
